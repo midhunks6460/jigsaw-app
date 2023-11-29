@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jigsaw Puzzle</title>
+    <style>
+        /* Add your styling for the puzzle pieces here */
+        /* For example, you can set the width, height, and background image */
+        .puzzle-piece {
+            width: 100px;
+            height: 100px;
+            background-size: cover;
+            margin: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Jigsaw Puzzle</h1>
+    <div id="puzzle-container">
+        {% for piece in puzzle_pieces %}
+            <div class="puzzle-piece" id="piece{{ piece.id }}" style="background-image: url('{{ piece.image }}');" draggable="true"></div>
+        {% endfor %}
+    </div>
+    <button id="shuffle-button">Shuffle Pieces</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const puzzleContainer = document.getElementById('puzzle-container');
+            const shuffleButton = document.getElementById('shuffle-button');
+
+            // Event listener for dragging puzzle pieces
+            puzzleContainer.addEventListener('dragstart', function (e) {
+                e.dataTransfer.setData('text/plain', e.target.id);
+            });
+
+            // Event listener for dropping puzzle pieces
+            puzzleContainer.addEventListener('dragover', function (e) {
+                e.preventDefault();
+            });
+
+            puzzleContainer.addEventListener('drop', function (e) {
+                e.preventDefault();
+                const data = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.getElementById(data);
+                const dropTarget = e.target;
+
+                if (dropTarget.classList.contains('puzzle-piece')) {
+                    puzzleContainer.insertBefore(draggedElement, dropTarget);
+                }
+            });
+
+            // Event listener for shuffling puzzle pieces
+            shuffleButton.addEventListener('click', function () {
+                fetch('/shuffle')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            puzzleContainer.innerHTML = ''; // Clear the puzzle container
+                            // Add shuffled pieces back to the container
+                            {% for piece in puzzle_pieces %}
+                                puzzleContainer.innerHTML += `<div class="puzzle-piece" id="piece{{ piece.id }}" style="background-image: url('{{ piece.image }}');" draggable="true"></div>`;
+                            {% endfor %}
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    </script>
+</body>
+</html>
